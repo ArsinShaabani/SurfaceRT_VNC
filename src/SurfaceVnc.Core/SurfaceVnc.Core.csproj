@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    SurfaceVnc.Core : platform independent VNC (RFB) client core.
+
+    This project targets netstandard2.0 so that it can be compiled and unit tested on
+    any machine (Linux/Windows/macOS, .NET Core/5+).  The exact same source files are
+    *linked* into the Windows Store app project (src/SurfaceVnc.Store) which adds the
+    WinRT specific pieces (StreamSocket transport, WriteableBitmap renderer, XAML UI).
+
+    Keep this code C# 5 / .NET 4.5 compatible: the Windows Store app for Windows RT
+    8.1 is built with the Windows 8.1 tool chain.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>SurfaceVnc.Core</AssemblyName>
+    <RootNamespace>SurfaceVnc.Core</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <NoWarn>$(NoWarn);CS1591;CS0618</NoWarn>
+  </PropertyGroup>
+
+</Project>
