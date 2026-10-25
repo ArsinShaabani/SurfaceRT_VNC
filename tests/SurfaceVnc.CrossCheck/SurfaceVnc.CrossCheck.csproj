@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    SurfaceVnc.CrossCheck : drives the real RfbClient against the independent RFB server written in
+    Python (tools/crosscheck-server.py).
+
+    The C# test suite uses a server written in C#, so a shared misreading of RFC 6143 could hide a
+    bug.  This harness connects the production client to a second implementation written in another
+    language, verifies the decoded framebuffer against the image that server sent, and lets the
+    server verify the bytes the client wrote back.
+
+    Run through: tools/check-cross-language.sh
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>SurfaceVnc.CrossCheck</AssemblyName>
+    <RootNamespace>SurfaceVnc.CrossCheck</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SurfaceVnc.Core\SurfaceVnc.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -97,3 +97,11 @@ RFB carries **X11 keysyms**:
 contains a real RFB server (a separate implementation of the server side, written from the RFC)
 which the production client is driven against over TCP on `127.0.0.1`, so handshakes, encodings,
 input events and error paths are all exercised for real rather than mocked.
+
+`tools/check-cross-language.sh` adds a second, independent check: the same client is driven against
+an RFB server written in **Python** from RFC 6143 (`tools/crosscheck-server.py`).  That server
+verifies the bytes the client sends (pixel format, encoding order, pointer/key/clipboard events) and
+checks the VNC authentication response with **OpenSSL**, while the C# harness verifies the decoded
+framebuffer against the image the Python server sent.  Two independent implementations in two
+languages agreeing on the wire format is what makes a shared misreading of the spec unlikely to go
+unnoticed.

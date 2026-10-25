@@ -19,6 +19,9 @@ namespace SurfaceVnc.Tests
             TestRunner.Add("Hextile raw tiles decode over TCP", HextileRawTiles);
             TestRunner.Add("Hextile foreground sub-rectangles decode over TCP", HextileForeground);
             TestRunner.Add("Hextile follows the RFC byte layout", HextileHandCraftedVector);
+            TestRunner.Add("Hextile inherits background and foreground between tiles", HextileInheritedColours);
+            TestRunner.Add("An empty FramebufferUpdate does not desynchronise the stream", EmptyUpdate);
+            TestRunner.Add("Rectangles that stick out of the framebuffer are clipped without desync", ClippingOverTheWire);
             TestRunner.Add("RRE rectangles decode over TCP", RreEndToEnd);
             TestRunner.Add("CoRRE rectangles decode over TCP", CoRreEndToEnd);
             TestRunner.Add("CopyRect scrolls the framebuffer", CopyRectEndToEnd);
@@ -205,6 +208,123 @@ namespace SurfaceVnc.Tests
                     Check.Pixel(harness.Client.Framebuffer, 1, 0, 0x20, 0x00, 0x40, "background pixel");
                     Check.Pixel(harness.Client.Framebuffer, 0, 1, 0x20, 0x00, 0x40, "background pixel");
                     Check.Pixel(harness.Client.Framebuffer, 1, 1, 0xFF, 0x00, 0x00, "sub-rectangle pixel");
+                }
+            }
+        }
+
+        /// <summary>
+        /// An image whose tiles share one background colour, so a server can omit the background
+        /// pixel for most tiles and send bare "0" tiles (real servers do exactly this).
+        /// </summary>
+        private static uint InheritedPatternRgb(int x, int y)
+        {
+            bool blockInFirstTile = x >= 4 && x < 8 && y >= 4 && y < 6;
+            bool wholeSecondTile = x >= 16 && x < 32 && y >= 16 && y < 32;
+            return (blockInFirstTile || wholeSecondTile) ? 0x00FF00u : 0x000000u;
+        }
+
+        private static async Task HextileInheritedColours()
+        {
+            const int width = 40;
+            const int height = 24;
+
+            using (FakeRfbServer server = new FakeRfbServer(width, height))
+            {
+                using (ClientHarness harness = await ClientHarness.StartAsync(server, null))
+                {
+                    Check.True(server.WaitForHandshake(5000), "the handshake did not finish");
+
+                    byte[] image = BuildImage(width, height, InheritedPatternRgb);
+                    FramebufferUpdateBuilder builder = new FramebufferUpdateBuilder(PixelFormat.DefaultBgra8);
+                    builder.AddRectangle(0, 0, width, height, RfbEncoding.Hextile,
+                        writer => Encoders.HextileInherited(writer, image, width, height, PixelFormat.DefaultBgra8));
+
+                    Check.True(await WaitForUpdateAsync(harness, server, builder.Build()), "no update was decoded");
+                    AssertColours(harness.Client.Framebuffer, width, height, InheritedPatternRgb, "hextile inheritance");
+                }
+            }
+        }
+
+        private static async Task EmptyUpdate()
+        {
+            using (FakeRfbServer server = new FakeRfbServer(32, 32))
+            {
+                using (ClientHarness harness = await ClientHarness.StartAsync(server, null))
+                {
+                    Check.True(server.WaitForHandshake(5000), "the handshake did not finish");
+
+                    int updates = 0;
+                    EventHandler<FramebufferUpdateEventArgs> handler = (sender, args) => Interlocked.Increment(ref updates);
+                    harness.Client.FramebufferUpdated += handler;
+                    try
+                    {
+                        // A FramebufferUpdate with zero rectangles is legal: the server is telling
+                        // us that nothing changed.
+                        server.QueueFrame(new FramebufferUpdateBuilder(PixelFormat.DefaultBgra8).Build());
+
+                        byte[] image = BuildImage(32, 32, PatternRgb);
+                        FramebufferUpdateBuilder next = new FramebufferUpdateBuilder(PixelFormat.DefaultBgra8);
+                        next.AddRectangle(0, 0, 32, 32, RfbEncoding.Raw,
+                            writer => Encoders.Raw(writer, image, 32, 32, PixelFormat.DefaultBgra8));
+                        server.QueueFrame(next.Build());
+
+                        Check.True(await Wait.UntilAsync(() => updates > 0, 5000), "the update after the empty one was lost");
+                    }
+                    finally
+                    {
+                        harness.Client.FramebufferUpdated -= handler;
+                    }
+
+                    AssertColours(harness.Client.Framebuffer, 32, 32, PatternRgb, "after an empty update");
+                }
+            }
+        }
+
+        private static async Task ClippingOverTheWire()
+        {
+            const int width = 16;
+            const int height = 16;
+
+            using (FakeRfbServer server = new FakeRfbServer(width, height))
+            {
+                using (ClientHarness harness = await ClientHarness.StartAsync(server, null))
+                {
+                    Check.True(server.WaitForHandshake(5000), "the handshake did not finish");
+
+                    // Two rectangles in one message: the first one sticks out of the framebuffer,
+                    // so the client has to consume every byte of it (otherwise the second
+                    // rectangle would be decoded from the wrong offset) and clip the pixels.
+                    byte[] clipped = BuildImage(8, 8, PatternRgb);
+                    byte[] corner = BuildImage(4, 4, (x, y) => 0x0000FFu);
+
+                    FramebufferUpdateBuilder builder = new FramebufferUpdateBuilder(PixelFormat.DefaultBgra8);
+                    builder.AddRectangle(12, 12, 8, 8, RfbEncoding.Raw,
+                        writer => Encoders.Raw(writer, clipped, 8, 8, PixelFormat.DefaultBgra8));
+                    builder.AddRectangle(0, 0, 4, 4, RfbEncoding.Raw,
+                        writer => Encoders.Raw(writer, corner, 4, 4, PixelFormat.DefaultBgra8));
+
+                    Check.True(await WaitForUpdateAsync(harness, server, builder.Build()), "no update was decoded");
+
+                    Framebuffer framebuffer = harness.Client.Framebuffer;
+                    for (int y = 12; y < 16; y++)
+                    {
+                        for (int x = 12; x < 16; x++)
+                        {
+                            uint expected = PatternRgb(x - 12, y - 12);
+                            Check.Pixel(framebuffer, x, y, (byte)(expected >> 16), (byte)(expected >> 8), (byte)expected,
+                                "clipped rectangle");
+                        }
+                    }
+
+                    for (int y = 0; y < 4; y++)
+                    {
+                        for (int x = 0; x < 4; x++)
+                        {
+                            Check.Pixel(framebuffer, x, y, 0x00, 0x00, 0xFF, "rectangle after the clipped one");
+                        }
+                    }
+
+                    Check.Pixel(framebuffer, 8, 8, 0, 0, 0, "untouched pixel");
                 }
             }
         }

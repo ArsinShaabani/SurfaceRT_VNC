@@ -14,19 +14,23 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-echo "### 1/4  core test suite"
+echo "### 1/5  core test suite"
 ./tools/verify.sh "$@"
 
 echo
-echo "### 2/4  store app structural checks"
+echo "### 2/5  store app structural checks"
 python3 tools/check-store-app.py
 
 echo
-echo "### 3/4  store app compile check (C# 5, WinRT stubs)"
+echo "### 3/5  store app compile check (C# 5, WinRT stubs)"
 ./tools/check-store-compiles.sh
 
 echo
-echo "### 4/4  app assets"
+echo "### 4/5  cross language check (C# client vs an independent python RFB server)"
+./tools/check-cross-language.sh
+
+echo
+echo "### 5/5  app assets"
 python3 tools/make-assets.py
 
 echo

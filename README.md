@@ -52,7 +52,9 @@ src/SurfaceVnc.Store/    اپلیکیشن Windows Store برای ویندوز RT
   Rfb/FramebufferRenderer.cs     رسم فریم‌بافر در WriteableBitmap
   Rfb/RemoteKeyboardBridge.cs    صفحه‌کلید لمسی/فیزیکی → کیبورد ریموت
   Package.appxmanifest   قابلیت دسترسی به شبکه محلی
-tests/SurfaceVnc.Tests/  تست‌های خودکار (۴۸ تست، با یک سرور VNC واقعی روی 127.0.0.1)
+tests/SurfaceVnc.Tests/  تست‌های خودکار (۵۱ تست، با یک سرور VNC واقعی روی 127.0.0.1)
+tests/SurfaceVnc.CrossCheck/ بررسی بین‌زبانی: کلاینت C# در برابر سرور مستقل پایتونی
+tests/winrt-stubs/       مدل کامپایلی APIهای WinRT برای type-check کردن اپ
 tools/                   اسکریپت‌های ساخت/تست/دپلوی
 docs/                    راهنمای نصب (DEPLOY.md) و مستندات پروتکل (PROTOCOL.md)
 ```
@@ -77,11 +79,12 @@ docs/                    راهنمای نصب (DEPLOY.md) و مستندات پ�
 
 ```bash
 tools/install-dotnet.sh      # فقط بار اول: نصب SDK به‌صورت محلی
-tools/verify-all.sh          # اجرای همه بررسی‌ها (تست‌ها + بررسی ساختاری + کامپایل اپ)
-tools/verify.sh              # فقط ساخت هسته + اجرای ۴۸ تست
+tools/verify-all.sh          # همه بررسی‌ها (تست + ساختاری + کامپایل + بین‌زبانی)
+tools/verify.sh              # فقط ساخت هسته + اجرای ۵۱ تست
 tools/verify.sh Hextile      # اجرای تست‌های یک بخش خاص
 tools/check-store-app.py     # بررسی ساختاری سورس‌های اپ Store (XAML، هندلرها، پروژه، manifest)
 tools/check-store-compiles.sh# کامپایل سورس‌های اپ با C# 5 در برابر stub‌های WinRT
+tools/check-cross-language.sh# کلاینت C# در برابر یک سرور VNC مستقل پایتونی
 python3 tools/make-assets.py # ساخت تصاویر کاشی/اسپلش اپ
 ```
 
@@ -99,6 +102,13 @@ XAML ارجاع شده‌اند با امضای درست، اینکه پروژه
 استفاده می‌کند) کامپایل و type-check می‌شوند. فیلدهای تولیدشده از XAML هم با اسکریپت
 `tools/generate-xaml-fields.py` ساخته می‌شوند، پس اگر نام یا نوع کنترلی با XAML نخواند،
 همان‌جا خطا می‌گیرید.
+
+**۴) بررسی بین‌زبانی:** `tools/check-cross-language.sh` همان کلاینت C# را به یک **سرور VNC
+مستقل که در پایتون از RFC 6143 نوشته شده** وصل می‌کند. سرور پایتونی بایت‌های خروجی کلاینت را
+می‌سنجد (handshake، فرمت پیکسل، ترتیب انکودینگ‌ها، رویداد ماوس/کیبورد/کلیپ‌بورد) و پاسخ
+احراز هویت DES را با **openssl** تأیید می‌کند؛ کلاینت هم تصویر دیکود‌شده را با تصویری که سرور
+فرستاده مقایسه می‌کند. چون دو پیاده‌سازی مستقل (و در دو زبان) باید به یک نتیجه برسند، یک
+برداشت غلط مشترک از RFC پنهان نمی‌ماند.
 
 ---
 
@@ -129,7 +139,8 @@ directions.
 * Windows RT app: `src/SurfaceVnc.Store` (C#/XAML, links the core sources, ARM configurations).
 * Build: open `SurfaceVnc.sln` in Visual Studio 2013 with the Windows 8.1 SDK, select **ARM** and
   deploy. See [docs/DEPLOY.md](docs/DEPLOY.md).
-* Verify: `tools/verify-all.sh` runs the 48 automated tests (the real client driven against a real
-  RFB server over TCP), structural checks of the app sources, and a C# 5 compile check of the app
-  layer against `tests/winrt-stubs` (a compile time model of the WinRT APIs it uses).
+* Verify: `tools/verify-all.sh` runs the 51 automated tests (the real client driven against a real
+  RFB server over TCP), structural checks of the app sources, a C# 5 compile check of the app layer
+  against `tests/winrt-stubs` (a compile time model of the WinRT APIs it uses), and a cross language
+  check that drives the same client against an independent RFB server written in Python.
 * Protocol notes and the list of implemented RFB features: [docs/PROTOCOL.md](docs/PROTOCOL.md).
