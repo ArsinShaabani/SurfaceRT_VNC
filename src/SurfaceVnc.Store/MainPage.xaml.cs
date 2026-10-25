@@ -200,6 +200,8 @@ namespace SurfaceVnc.Store
                 _keyboard = null;
             }
 
+            ReleasePressedInput();
+
             if (_client != null)
             {
                 _client.FramebufferUpdated -= OnFramebufferUpdated;
@@ -236,6 +238,43 @@ namespace SurfaceVnc.Store
             }
 
             ReleaseKeepAwake();
+        }
+
+        /// <summary>
+        /// Releases a held mouse button and any sticky modifier keys before the connection goes
+        /// away, otherwise the PC would keep them pressed forever.
+        /// </summary>
+        private void ReleasePressedInput()
+        {
+            RfbClient client = _client;
+            if (client == null)
+            {
+                _leftButtonDown = false;
+                _activeModifiers.Clear();
+                return;
+            }
+
+            try
+            {
+                if (_leftButtonDown)
+                {
+                    int x = _lastRemoteX < 0 ? 0 : _lastRemoteX;
+                    int y = _lastRemoteY < 0 ? 0 : _lastRemoteY;
+                    client.SendPointerEventAsync(0, x, y, CancellationToken.None).Wait(200);
+                    _leftButtonDown = false;
+                }
+
+                foreach (KeyValuePair<uint, Button> entry in new List<KeyValuePair<uint, Button>>(_activeModifiers))
+                {
+                    client.SendKeyEventAsync(entry.Key, false, CancellationToken.None).Wait(200);
+                    entry.Value.ClearValue(Control.BackgroundProperty);
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            _activeModifiers.Clear();
         }
 
         private void RequestKeepAwake()
