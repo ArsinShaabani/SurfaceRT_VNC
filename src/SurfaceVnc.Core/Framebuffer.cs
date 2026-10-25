@@ -174,9 +174,9 @@ namespace SurfaceVnc.Core
         }
 
         /// <summary>
-        /// Copies a region into a destination buffer with an arbitrary stride.  Destination
-        /// coordinates are framebuffer coordinates, so the caller can point at a full size
-        /// buffer (a WriteableBitmap pixel buffer, for example) and only refresh the damaged part.
+        /// Copies a region into a destination buffer.  The destination is addressed *relative to
+        /// the region*: region row <c>r</c> lands at <c>destinationOffset + r * destinationStride</c>.
+        /// This is what the UI layer uses to refresh just the damaged part of the WriteableBitmap.
         /// </summary>
         public void CopyRegionTo(Rect region, byte[] destination, int destinationOffset, int destinationStride)
         {
@@ -188,7 +188,7 @@ namespace SurfaceVnc.Core
             for (int row = 0; row < source.Height; row++)
             {
                 int srcOffset = (source.Y + row) * Stride + source.X * BytesPerPixel;
-                int dstOffset = destinationOffset + (source.Y + row) * destinationStride + source.X * BytesPerPixel;
+                int dstOffset = destinationOffset + row * destinationStride;
                 if (dstOffset < 0 || dstOffset + byteCount > destination.Length) break;
                 Buffer.BlockCopy(_pixels, srcOffset, destination, dstOffset, byteCount);
             }

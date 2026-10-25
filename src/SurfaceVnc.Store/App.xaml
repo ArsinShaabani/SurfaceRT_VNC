@@ -1,0 +1,19 @@
+<Application
+    x:Class="SurfaceVnc.Store.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Application.Resources>
+        <!-- Colours and styles shared by the single page of the app. -->
+        <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FF102A43" />
+        <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#FF1B3A5C" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#FF3FA7D6" />
+
+        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+            <Setter Property="MinWidth" Value="64" />
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+    </Application.Resources>
+</Application>

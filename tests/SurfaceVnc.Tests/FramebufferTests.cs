@@ -60,20 +60,26 @@ namespace SurfaceVnc.Tests
             Framebuffer framebuffer = new Framebuffer();
             framebuffer.Resize(4, 4);
             framebuffer.FillBgra8(0, 0, 4, 4, 0x10, 0x20, 0x30);
+            framebuffer.FillBgra8(2, 2, 1, 1, 0xAA, 0xBB, 0xCC);
 
-            // The destination is a full size (4x4) buffer with a stride of 4 pixels.
-            byte[] destination = new byte[4 * 4 * 4];
-            framebuffer.CopyRegionTo(new Rect(1, 1, 2, 2), destination, 0, 16);
+            // The destination is addressed relative to the region: 2x2 pixels, stride 12 bytes.
+            byte[] destination = new byte[2 * 12];
+            framebuffer.CopyRegionTo(new Rect(1, 1, 2, 2), destination, 0, 12);
 
-            int first = (1 * 4 + 1) * 4;
-            Check.Equal(0x10, destination[first + 0], "region pixel blue");
-            Check.Equal(0x20, destination[first + 1], "region pixel green");
-            Check.Equal(0x30, destination[first + 2], "region pixel red");
-            Check.Equal(0xFF, destination[first + 3], "region pixel alpha");
+            Check.Equal(0x10, destination[0], "region pixel blue");
+            Check.Equal(0x20, destination[1], "region pixel green");
+            Check.Equal(0x30, destination[2], "region pixel red");
+            Check.Equal(0xFF, destination[3], "region pixel alpha");
 
-            int secondRow = (2 * 4 + 1) * 4;
-            Check.Equal(0x10, destination[secondRow], "second row of the region");
-            Check.Equal(0, destination[0], "pixels outside the region must be untouched");
+            // Row 1 of the region starts at byte 12 and its second pixel is framebuffer (2,2).
+            Check.Equal(0x10, destination[12], "second row, first pixel");
+            Check.Equal(0xAA, destination[16], "second row, second pixel");
+
+            // A destination offset shifts the whole region.
+            byte[] offsetDestination = new byte[2 * 12 + 8];
+            framebuffer.CopyRegionTo(new Rect(1, 1, 2, 2), offsetDestination, 8, 12);
+            Check.Equal(0x10, offsetDestination[8], "region with an offset");
+            Check.Equal(0, offsetDestination[0], "bytes before the offset must be untouched");
         }
 
         private static void Resize()

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest"
+         xmlns:m3="http://schemas.microsoft.com/appx/2013/manifest">
+
+  <Identity Name="SurfaceVnc.Store"
+            Publisher="CN=SurfaceVnc"
+            Version="1.0.0.0" />
+
+  <Properties>
+    <DisplayName>SurfaceVnc</DisplayName>
+    <PublisherDisplayName>SurfaceVnc</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Prerequisites>
+    <OSMinVersion>6.3.0</OSMinVersion>
+    <OSMaxVersionTested>6.3.0</OSMaxVersionTested>
+  </Prerequisites>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App" Executable="SurfaceVnc.Store.exe" EntryPoint="SurfaceVnc.Store.App">
+      <m3:VisualElements DisplayName="SurfaceVnc"
+                         Description="Touch friendly VNC client that turns this tablet into a local remote desktop."
+                         Square150x150Logo="Assets\Logo.png"
+                         Square30x30Logo="Assets\SmallLogo.png"
+                         BackgroundColor="#FF102A43"
+                         ForegroundText="light">
+        <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" />
+        <m3:SplashScreen Image="Assets\SplashScreen.png" />
+      </m3:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Talking to the VNC server on the local network, and to machines behind a router. -->
+    <Capability Name="privateNetworkClientServer" />
+    <Capability Name="internetClient" />
+  </Capabilities>
+
+</Package>

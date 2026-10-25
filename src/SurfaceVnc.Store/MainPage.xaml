@@ -1,0 +1,111 @@
+<Page
+    x:Class="SurfaceVnc.Store.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="{StaticResource AppBackgroundBrush}">
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Main toolbar.  Kept scrollable so every button stays reachable on a 1366x768 screen. -->
+        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled"
+                      VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled"
+                      Background="{StaticResource ToolbarBackgroundBrush}">
+            <StackPanel Orientation="Horizontal" Padding="4">
+                <Button x:Name="ConnectButton" Content="Connect" Style="{StaticResource ToolbarButtonStyle}" Click="Connect_Click" />
+                <Button x:Name="ScaleButton" Content="Fit" Style="{StaticResource ToolbarButtonStyle}" Click="Scale_Click" />
+                <Button x:Name="KeysButton" Content="Keys" Style="{StaticResource ToolbarButtonStyle}" Click="Keys_Click" />
+                <Button x:Name="RightClickButton" Content="Right" Style="{StaticResource ToolbarButtonStyle}" Click="RightClick_Click" />
+                <Button x:Name="WheelUpButton" Content="Scroll &#x25B2;" Style="{StaticResource ToolbarButtonStyle}" Click="WheelUp_Click" />
+                <Button x:Name="WheelDownButton" Content="Scroll &#x25BC;" Style="{StaticResource ToolbarButtonStyle}" Click="WheelDown_Click" />
+                <Button x:Name="PasteButton" Content="Paste" Style="{StaticResource ToolbarButtonStyle}" Click="Paste_Click" />
+                <Button x:Name="TypeTextButton" Content="Type text" Style="{StaticResource ToolbarButtonStyle}" Click="TypeText_Click" />
+                <Button x:Name="FullScreenButton" Content="Full screen" Style="{StaticResource ToolbarButtonStyle}" Click="FullScreen_Click" />
+
+                <!-- Tapping this box opens the Windows on-screen keyboard; what is typed is
+                     forwarded to the remote desktop and the box is cleared again. -->
+                <TextBox x:Name="KeyboardProxy" Width="220" Height="44" Margin="6,2,2,2"
+                         PlaceholderText="tap here to type on the PC" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Extra keys, shown by the "Keys" button. -->
+        <ScrollViewer x:Name="KeysPanel" Grid.Row="1" Visibility="Collapsed"
+                      HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled"
+                      VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled"
+                      Background="{StaticResource ToolbarBackgroundBrush}">
+            <StackPanel Orientation="Horizontal" Padding="4">
+                <Button Content="Esc" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Escape" />
+                <Button Content="Tab" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Tab" />
+                <Button Content="Enter" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Return" />
+                <Button Content="Backspace" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="BackSpace" />
+                <Button Content="Delete" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Delete" />
+                <Button Content="&#x25B2;" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Up" />
+                <Button Content="&#x25BC;" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Down" />
+                <Button Content="&#x25C0;" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Left" />
+                <Button Content="&#x25B6;" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Right" />
+                <Button Content="Home" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="Home" />
+                <Button Content="End" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="End" />
+                <Button Content="PgUp" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="PageUp" />
+                <Button Content="PgDn" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="PageDown" />
+                <Button Content="Ctrl" Style="{StaticResource ToolbarButtonStyle}" Click="Modifier_Click" Tag="ControlLeft" />
+                <Button Content="Alt" Style="{StaticResource ToolbarButtonStyle}" Click="Modifier_Click" Tag="AltLeft" />
+                <Button Content="Shift" Style="{StaticResource ToolbarButtonStyle}" Click="Modifier_Click" Tag="ShiftLeft" />
+                <Button Content="Win" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="SuperLeft" />
+                <Button Content="Ctrl+Alt+Del" Style="{StaticResource ToolbarButtonStyle}" Click="CtrlAltDel_Click" />
+                <Button Content="F5" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="F5" />
+                <Button Content="F11" Style="{StaticResource ToolbarButtonStyle}" Click="Key_Click" Tag="F11" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- The remote desktop. -->
+        <Grid x:Name="Viewport" Grid.Row="2" Background="Black" SizeChanged="Viewport_SizeChanged">
+            <Canvas x:Name="RemoteCanvas" Background="Transparent"
+                    PointerPressed="RemoteCanvas_PointerPressed"
+                    PointerMoved="RemoteCanvas_PointerMoved"
+                    PointerReleased="RemoteCanvas_PointerReleased"
+                    PointerCanceled="RemoteCanvas_PointerReleased"
+                    PointerCaptureLost="RemoteCanvas_PointerReleased">
+                <Image x:Name="RemoteImage" Stretch="Fill" />
+            </Canvas>
+
+            <!-- Connection settings, shown while no session is running. -->
+            <Border x:Name="SettingsPanel" Background="#E6102A43" BorderBrush="{StaticResource AccentBrush}"
+                    BorderThickness="1" CornerRadius="6" Padding="18"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" Width="420">
+                <StackPanel>
+                    <TextBlock Text="SurfaceVnc - local remote desktop" FontSize="22" Foreground="White" />
+                    <TextBlock Text="Connect to a VNC server (TightVNC, UltraVNC, TigerVNC, RealVNC ...) running on your PC."
+                               TextWrapping="Wrap" Foreground="#FFB8C7D6" Margin="0,6,0,14" />
+
+                    <TextBlock Text="Address or computer name" Foreground="White" />
+                    <TextBox x:Name="HostBox" PlaceholderText="192.168.1.10" />
+
+                    <TextBlock Text="Port" Foreground="White" Margin="0,10,0,0" />
+                    <TextBox x:Name="PortBox" Text="5900" />
+
+                    <TextBlock Text="Password (optional)" Foreground="White" Margin="0,10,0,0" />
+                    <PasswordBox x:Name="PasswordBox" />
+
+                    <CheckBox x:Name="ViewOnlyCheckBox" Content="View only (do not send touch or keys)" Foreground="White" Margin="0,10,0,0" />
+                    <CheckBox x:Name="KeepAwakeCheckBox" Content="Keep the screen on while connected" Foreground="White" IsChecked="True" />
+
+                    <Button Content="Connect" Click="Connect_Click" Margin="0,14,0,0" HorizontalAlignment="Stretch" Height="44" />
+                    <TextBlock x:Name="SettingsErrorText" Foreground="#FFFF9A9A" TextWrapping="Wrap" Margin="0,10,0,0" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Status bar. -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Background="{StaticResource ToolbarBackgroundBrush}" Padding="8,4">
+            <TextBlock x:Name="StatusText" Foreground="White" Text="Not connected" />
+            <TextBlock x:Name="HintText" Foreground="#FFB8C7D6" Margin="16,0,0,0"
+                       Text="One finger = mouse, two fingers = scroll (Fit) or pan (1:1), long press = right click" />
+        </StackPanel>
+    </Grid>
+</Page>
