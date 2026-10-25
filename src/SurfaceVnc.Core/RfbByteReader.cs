@@ -1,5 +1,4 @@
 using System;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,9 +11,6 @@ namespace SurfaceVnc.Core
     /// </summary>
     public sealed class RfbByteReader
     {
-        /// <summary>Latin-1 is byte == char, which is what RFB strings use.</summary>
-        internal static readonly Encoding Latin1 = Encoding.GetEncoding(28591);
-
         private readonly IRfbTransport _transport;
         private readonly byte[] _buffer;
         private int _position;
@@ -100,7 +96,7 @@ namespace SurfaceVnc.Core
             if (byteCount <= 0) return string.Empty;
             byte[] temp = new byte[byteCount];
             await ReadExactAsync(temp, 0, byteCount, cancellationToken).ConfigureAwait(false);
-            return Latin1.GetString(temp, 0, temp.Length);
+            return SurfaceVnc.Core.Latin1.GetString(temp, 0, temp.Length);
         }
 
         /// <summary>Reads <paramref name="count"/> bytes into a freshly allocated array.</summary>

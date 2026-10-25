@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    SurfaceVnc.Tests : executable test suite for SurfaceVnc.Core.
+
+    It runs on plain .NET (no test framework, no NuGet packages) so it can be executed on any
+    build machine with `dotnet run`.  The suite starts a *real* RFB server implementation on
+    127.0.0.1 and drives the production client core against it over TCP, which is what makes
+    the protocol, decoder and authentication behaviour verifiable without a Surface RT.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>SurfaceVnc.Tests</AssemblyName>
+    <RootNamespace>SurfaceVnc.Tests</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SurfaceVnc.Core\SurfaceVnc.Core.csproj" />
+  </ItemGroup>
+
+</Project>

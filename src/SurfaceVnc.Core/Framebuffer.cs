@@ -57,6 +57,7 @@ namespace SurfaceVnc.Core
             {
                 Array.Clear(_pixels, 0, _pixels.Length);
             }
+            ForceOpaqueAlpha();
 
             if (changed)
             {
@@ -68,6 +69,18 @@ namespace SurfaceVnc.Core
         public void Clear()
         {
             Array.Clear(_pixels, 0, _pixels.Length);
+            ForceOpaqueAlpha();
+        }
+
+        /// <summary>
+        /// Keeps the "every pixel has an opaque alpha byte" invariant: the WinRT WriteableBitmap
+        /// treats its buffer as premultiplied BGRA, so an alpha of 0 would make freshly cleared
+        /// pixels invisible instead of black.
+        /// </summary>
+        private void ForceOpaqueAlpha()
+        {
+            for (int i = 3; i < _pixels.Length; i += BytesPerPixel)
+                _pixels[i] = 0xFF;
         }
 
         /// <summary>
@@ -161,8 +174,9 @@ namespace SurfaceVnc.Core
         }
 
         /// <summary>
-        /// Copies a region into a destination buffer with an arbitrary stride.  Used by the UI
-        /// layer to refresh just the damaged part of the WriteableBitmap.
+        /// Copies a region into a destination buffer with an arbitrary stride.  Destination
+        /// coordinates are framebuffer coordinates, so the caller can point at a full size
+        /// buffer (a WriteableBitmap pixel buffer, for example) and only refresh the damaged part.
         /// </summary>
         public void CopyRegionTo(Rect region, byte[] destination, int destinationOffset, int destinationStride)
         {
@@ -174,8 +188,8 @@ namespace SurfaceVnc.Core
             for (int row = 0; row < source.Height; row++)
             {
                 int srcOffset = (source.Y + row) * Stride + source.X * BytesPerPixel;
-                int dstOffset = destinationOffset + row * destinationStride + source.X * BytesPerPixel;
-                if (dstOffset + byteCount > destination.Length) break;
+                int dstOffset = destinationOffset + (source.Y + row) * destinationStride + source.X * BytesPerPixel;
+                if (dstOffset < 0 || dstOffset + byteCount > destination.Length) break;
                 Buffer.BlockCopy(_pixels, srcOffset, destination, dstOffset, byteCount);
             }
         }

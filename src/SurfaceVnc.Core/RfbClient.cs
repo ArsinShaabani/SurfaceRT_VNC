@@ -528,7 +528,7 @@ namespace SurfaceVnc.Core
             if (IsViewOnly()) return;
             if (text == null) text = string.Empty;
 
-            byte[] payload = RfbByteReader.Latin1.GetBytes(text);
+            byte[] payload = Latin1.GetBytes(text);
             byte[] message = new byte[8 + payload.Length];
             message[0] = RfbProtocol.MsgClientCutText;
             message[4] = (byte)(payload.Length >> 24);
