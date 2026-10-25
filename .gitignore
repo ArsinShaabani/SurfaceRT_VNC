@@ -17,3 +17,4 @@
 *.cer
 *.pfx
 AppPackages/
+tests/SurfaceVnc.StoreCompile/Generated/

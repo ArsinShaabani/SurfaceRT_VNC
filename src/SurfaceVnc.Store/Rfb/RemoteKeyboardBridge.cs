@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using SurfaceVnc.Core;
 using Windows.UI.Core;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace SurfaceVnc.Store

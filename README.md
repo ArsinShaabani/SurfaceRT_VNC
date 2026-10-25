@@ -75,20 +75,30 @@ docs/                    راهنمای نصب (DEPLOY.md) و مستندات پ�
 
 ## تأیید درستی (تست‌ها)
 
-هسته پروتکل روی هر سیستمی (لینوکس/ویندوز/مک) با .NET قابل ساخت و تست است:
-
 ```bash
 tools/install-dotnet.sh      # فقط بار اول: نصب SDK به‌صورت محلی
-tools/verify.sh              # ساخت هسته + اجرای ۴۸ تست
+tools/verify-all.sh          # اجرای همه بررسی‌ها (تست‌ها + بررسی ساختاری + کامپایل اپ)
+tools/verify.sh              # فقط ساخت هسته + اجرای ۴۸ تست
 tools/verify.sh Hextile      # اجرای تست‌های یک بخش خاص
-tools/check-store-app.py     # بررسی ساختاری سورس‌های اپ Store (XAML، هندلرها، پروژه)
+tools/check-store-app.py     # بررسی ساختاری سورس‌های اپ Store (XAML، هندلرها، پروژه، manifest)
+tools/check-store-compiles.sh# کامپایل سورس‌های اپ با C# 5 در برابر stub‌های WinRT
 python3 tools/make-assets.py # ساخت تصاویر کاشی/اسپلش اپ
 ```
 
-تست‌ها شامل یک **سرور VNC واقعی** روی `127.0.0.1` هستند: handshake نسخه ۳.۳ و ۳.۸، احراز
-هویت VNC (با بردار مرجع مستقل از OpenSSL)، همه انکودینگ‌های پشتیبانی‌شده (Raw، CopyRect،
-Hextile، RRE، CoRRE)، فرمت‌های پیکسل ۸/۱۶/۲۴/۳۲ بیت، رویدادهای ماوس/کیبورد/کلیپ‌بورد و
-نگاشت لمس به مختصات ریموت.
+**۱) تست‌های هسته:** یک **سرور VNC واقعی** روی `127.0.0.1` بالا می‌آید و کلاینت واقعی از طریق
+TCP به آن وصل می‌شود: handshake نسخه ۳.۳ و ۳.۸، احراز هویت VNC (با بردار مرجع مستقل از
+OpenSSL)، همه انکودینگ‌های پشتیبانی‌شده (Raw، CopyRect، Hextile، RRE، CoRRE)، فرمت‌های پیکسل
+۸/۱۶/۲۴/۳۲ بیت، رویدادهای ماوس/کیبورد/کلیپ‌بورد و نگاشت لمس به مختصات ریموت.
+
+**۲) بررسی ساختاری اپ:** درستی XML فایل‌های XAML/manifest/csproj، وجود همه handlerهایی که در
+XAML ارجاع شده‌اند با امضای درست، اینکه پروژه Store همه فایل‌های سورس را شامل می‌شود،
+قابلیت‌های شبکه در manifest، و اینکه سورس‌های هسته چیز غیرمجاز برای WinRT استفاده نکنند.
+
+**۳) کامپایل اپ:** اپ واقعی فقط روی ویندوز با Windows 8.1 SDK کامپایل می‌شود، ولی سورس‌های آن
+روی هر سیستمی با **C# 5** و در برابر `tests/winrt-stubs` (مدل کامپایلی APIهای WinRT که اپ
+استفاده می‌کند) کامپایل و type-check می‌شوند. فیلدهای تولیدشده از XAML هم با اسکریپت
+`tools/generate-xaml-fields.py` ساخته می‌شوند، پس اگر نام یا نوع کنترلی با XAML نخواند،
+همان‌جا خطا می‌گیرید.
 
 ---
 
@@ -119,6 +129,7 @@ directions.
 * Windows RT app: `src/SurfaceVnc.Store` (C#/XAML, links the core sources, ARM configurations).
 * Build: open `SurfaceVnc.sln` in Visual Studio 2013 with the Windows 8.1 SDK, select **ARM** and
   deploy. See [docs/DEPLOY.md](docs/DEPLOY.md).
-* Verify: `tools/verify.sh` (48 automated tests driving the real client against a real RFB
-  server over TCP) and `tools/check-store-app.py` (structural checks of the app sources).
+* Verify: `tools/verify-all.sh` runs the 48 automated tests (the real client driven against a real
+  RFB server over TCP), structural checks of the app sources, and a C# 5 compile check of the app
+  layer against `tests/winrt-stubs` (a compile time model of the WinRT APIs it uses).
 * Protocol notes and the list of implemented RFB features: [docs/PROTOCOL.md](docs/PROTOCOL.md).

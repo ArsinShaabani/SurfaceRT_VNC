@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Compile time model of the WinRT API surface used by SurfaceVnc.Store.  It exists so that the
+    Windows Store app sources can be compiled (and therefore checked) on any machine with the
+    .NET SDK, because the real Windows 8.1 Store app can only be built on Windows.
+
+    Nothing in here is ever executed: see WinRT.cs for the details.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>WinRTStubs</AssemblyName>
+    <RootNamespace>Windows</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>7.3</LangVersion>
+    <NoWarn>$(NoWarn);CS0067;CS0649;CS0169</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

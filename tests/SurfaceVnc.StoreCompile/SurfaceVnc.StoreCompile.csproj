@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Compiles the *real* Windows Store app sources (src/SurfaceVnc.Store plus the linked
+    src/SurfaceVnc.Core files) against the WinRT stubs in ../winrt-stubs.
+
+    The real app can only be built on Windows with the Windows 8.1 SDK; this project exists so the
+    app layer can still be type checked anywhere with `dotnet build`, which catches typos, wrong
+    argument counts, missing members and C# language level mistakes.
+
+    NETFX_CORE is defined so that the code paths taken on Windows RT are the ones being compiled
+    (that is what excludes SocketRfbTransport.cs, which uses System.Net.Sockets).
+
+    Build:  tools/check-store-compiles.sh
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>SurfaceVnc.StoreCompileCheck</AssemblyName>
+    <RootNamespace>SurfaceVnc.Store</RootNamespace>
+    <DefineConstants>NETFX_CORE;WINDOWS_APP;DEBUG;TRACE</DefineConstants>
+    <!-- The Windows 8.1 tool chain is a C# 5 compiler: compiling with 5 here enforces that. -->
+    <LangVersion>5</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Properties/AssemblyInfo.cs of the app is compiled as well, so do not generate one. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <NoWarn>$(NoWarn);CS0067;CS0414;CS0169;CS0649;CS1998;CS0168;CS0219</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\SurfaceVnc.Store\**\*.cs"
+             Exclude="..\..\src\SurfaceVnc.Store\obj\**\*.cs;..\..\src\SurfaceVnc.Store\bin\**\*.cs">
+      <Link>Store\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\src\SurfaceVnc.Core\**\*.cs"
+             Exclude="..\..\src\SurfaceVnc.Core\obj\**\*.cs;..\..\src\SurfaceVnc.Core\bin\**\*.cs">
+      <Link>Core\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\winrt-stubs\WinRTStubs.csproj" />
+  </ItemGroup>
+
+</Project>
